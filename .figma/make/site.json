@@ -1,0 +1,11 @@
+{
+  "title": "Xvesting AI",
+  "description": "Your intelligent investing companion. Ask anything about markets, stocks, and portfolio strategy.",
+  "language": "en",
+  "robots": {
+    "index": true
+  },
+  "icons": {
+    "icon": "/src/imports/image.png"
+  }
+}
