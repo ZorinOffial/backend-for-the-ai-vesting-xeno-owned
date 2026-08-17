@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import logoImg from '@/imports/image.png'
 
-const GROQ_API_KEY = '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'
+const GROQ_API_KEY = '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'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 const SYSTEM_PROMPT = `You are Xvesting AI, an expert AI investment advisor and financial analyst. You provide sharp, data-driven insights on:
