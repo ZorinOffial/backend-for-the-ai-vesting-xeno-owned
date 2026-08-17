@@ -1,20 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import logoImg from '@/imports/image.png'
 
-const GROQ_API_KEY = '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'
-const GROQ_MODEL = 'llama-3.3-70b-versatile'
-
-const SYSTEM_PROMPT = `You are Xvesting AI, an expert AI investment advisor and financial analyst. You provide sharp, data-driven insights on:
-- Stock market analysis (equities, ETFs, indices)
-- Portfolio construction and asset allocation
-- Macroeconomic trends and their market impact
-- Technical and fundamental analysis
-- Risk management strategies
-- Sector and industry deep-dives
-- Earnings analysis and valuation models
-- Cryptocurrency and alternative assets
-
-Be direct, concise, and professional. Use specific numbers, percentages, and financial terminology. When asked about specific stocks, provide P/E ratios, revenue trends, and competitive positioning where relevant. Always note that your analysis is informational and not personalized financial advice.`
+const CHAT_MODEL_LABEL = 'claude-sonnet-5'
 
 interface Message {
   id: string
@@ -37,20 +24,13 @@ const STARTER_PROMPTS = [
   "Explain the yield curve and recession signals",
 ]
 
-async function* streamGroqResponse(messages: { role: string; content: string }[]) {
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+async function* streamChatResponse(messages: { role: string; content: string }[]) {
+  const response = await fetch('/api/chat', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${GROQ_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
-      stream: true,
-      temperature: 0.7,
-      max_tokens: 1024,
-    }),
+    body: JSON.stringify({ messages }),
   })
 
   if (!response.ok) {
@@ -63,21 +43,7 @@ async function* streamGroqResponse(messages: { role: string; content: string }[]
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
-
-    const chunk = decoder.decode(value)
-    const lines = chunk.split('\n')
-
-    for (const line of lines) {
-      if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-        try {
-          const data = JSON.parse(line.slice(6))
-          const delta = data.choices?.[0]?.delta?.content
-          if (delta) yield delta
-        } catch {
-          // skip malformed lines
-        }
-      }
-    }
+    yield decoder.decode(value, { stream: true })
   }
 }
 
@@ -248,7 +214,7 @@ export default function App() {
         userMsg,
       ].map(m => ({ role: m.role, content: m.content }))
 
-      for await (const delta of streamGroqResponse(history)) {
+      for await (const delta of streamChatResponse(history)) {
         setConversations(prev =>
           prev.map(c =>
             c.id === convId
@@ -408,7 +374,7 @@ export default function App() {
               className="text-[10px] text-neutral-700 font-mono"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
-              {GROQ_MODEL}
+              {CHAT_MODEL_LABEL}
             </span>
           </div>
         </header>
